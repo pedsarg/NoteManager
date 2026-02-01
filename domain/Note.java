@@ -75,4 +75,20 @@ public class Note {
         this.tags = new ArrayList<>(tags);
         setUpdatedAt();
     }   
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Title: ").append(title).append("\n");
+        sb.append("Created: ").append(createdAt).append("\n");
+        sb.append("Updated: ").append(updatedAt).append("\n");
+        sb.append("Tags: ").append(tags).append("\n\n");
+
+        for (String line : content) {
+            sb.append(line).append("\n");
+        }
+
+        return sb.toString();
+    }
 }

@@ -10,6 +10,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,16 +29,16 @@ public class NoteService {
 
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(notePath.toFile()))){
             
-            bw.write("#Title: " + note.getTitle());
+            bw.write("Title: " + note.getTitle());
             bw.newLine();
             
-            bw.write("#CreatedAt: " + DateFormatter.format(note.getCreatedAt()));
+            bw.write("CreatedAt: " + DateFormatter.format(note.getCreatedAt()));
             bw.newLine();
             
-            bw.write("#UpdatedAt: " + DateFormatter.format(note.getUpdatedAt()));
+            bw.write("UpdatedAt: " + DateFormatter.format(note.getUpdatedAt()));
             bw.newLine();
             
-            bw.write("#Tags: ");
+            bw.write("Tags: ");
             if(note.getTags() != null && !note.getTags().isEmpty()){
                 for(String tag: note.getTags()){
                     bw.write(NameNormalizer.normalize(tag) + ";");
@@ -114,21 +116,101 @@ public class NoteService {
         return null;
     }
 
-    // public void overWriteNote(Path path, Note note){
+    public void overWriteNote(Path folderPath, Note note){
+        String normalizedTitle = NameNormalizer.normalize(note.getTitle());
 
-    // }
+        Path notePath = folderPath.resolve(normalizedTitle + ".txt");
 
-    // public void appendContent(Path path, String title, String content){
+        //Exception
+        if (!noteExists(folderPath, normalizedTitle)){
+            return;
+        };
 
-    // }
+        note.setUpdatedAt(LocalDateTime.now());
 
-    // public void deleteNote(Path path, String title){
+        try(BufferedWriter bw = new BufferedWriter(new FileWriter(notePath.toFile()))){
+            
+            bw.write("Title: " + note.getTitle());
+            bw.newLine();
+            
+            bw.write("CreatedAt: " + DateFormatter.format(note.getCreatedAt()));
+            bw.newLine();
+            
+            bw.write("UpdatedAt: " + DateFormatter.format(note.getUpdatedAt()));
+            bw.newLine();
+            
+            bw.write("Tags: ");
+            if(note.getTags() != null && !note.getTags().isEmpty()){
+                for(String tag: note.getTags()){
+                    bw.write(NameNormalizer.normalize(tag) + ";");
+                }
+            }
+            bw.newLine();
 
-    // }
+            if(note.getContent() != null){
+                for(String line:note.getContent()){
+                    bw.write(line);
+                    bw.newLine();
+                }
+            }
 
-    // public void renameNote(Path path, String oldTitle, String newTitle){
+        }catch (Exception e){
+            e.printStackTrace();
+        }  
+    }
 
-    // }
+    public void appendContent(Path folderPath, String title, String content){
+        String normalizedTitle = NameNormalizer.normalize(title);
+
+        //Exception
+        if (!noteExists(folderPath, normalizedTitle)){
+            return;
+        };
+
+        Note note = readNote(folderPath, normalizedTitle);
+
+        List<String> currentContent = new ArrayList<>(note.getContent());
+        currentContent.add(content);
+        note.setContent(currentContent);
+        note.setUpdatedAt(LocalDateTime.now());
+
+        overWriteNote(folderPath, note);
+    }
+
+    public void deleteNote(Path folderPath, String title){
+        String normalizedTitle = NameNormalizer.normalize(title);
+
+        //Exception
+        if (!noteExists(folderPath, normalizedTitle)){
+            return;
+        };
+
+        Path notePath = folderPath.resolve(normalizedTitle + ".txt");
+
+        try{
+            Files.delete(notePath);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void renameNote(Path folderPath, String oldTitle, String newTitle){
+        String normalizedOldTitle = NameNormalizer.normalize(oldTitle);
+        String normalizedNewTitle = NameNormalizer.normalize(newTitle);
+
+        //Exception
+        if (!noteExists(folderPath, normalizedOldTitle)){
+            return;
+        };
+
+        Path oldNotePath = folderPath.resolve(normalizedOldTitle + ".txt");
+        Path newNotePath = folderPath.resolve(normalizedNewTitle + ".txt");
+        try{
+            Files.move(oldNotePath, newNotePath, StandardCopyOption.REPLACE_EXISTING);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
     public boolean noteExists(Path folderPath, String title){
         String Standardtitle = NameNormalizer.normalize((title));
